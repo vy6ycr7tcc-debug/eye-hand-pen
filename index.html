@@ -811,14 +811,51 @@
 
     // Masterwork Renaissance Copperplate Engraved Eye Medallion
     // Utter stillness at the center of looking; celestial astrolabe aureole, drifting starlight motes, and living candlelight glint
-    function drawTheEye(localT, alpha = 1) {
+    function drawTheEye(localT, alpha = 1, opts = {}) {
       if (alpha <= 0.001) return;
       ctx.save();
       ctx.globalAlpha = alpha;
-      ctx.translate(cx, cy);
+      const offX = (opts.offsetX || 0) * S;
+      const offY = (opts.offsetY || 0) * S;
+      const customScale = opts.scale !== undefined ? opts.scale : 1.0;
+      ctx.translate(cx + offX, cy + offY);
+      ctx.scale(customScale, customScale);
 
       const isPortrait = width < height;
       const portraitScale = isPortrait ? 0.74 : 1.0;
+
+      // Downward ray of conscious attention cast through the veil into darkness
+      if (opts.drawVeilRay) {
+        const rayAlpha = opts.rayAlpha || 0.45;
+        const rayGrad = ctx.createLinearGradient(0, 0, 0, 560 * S);
+        rayGrad.addColorStop(0, "rgba(255, 233, 168, " + (rayAlpha * 0.85) + ")");
+        rayGrad.addColorStop(0.25, "rgba(232, 182, 76, " + (rayAlpha * 0.42) + ")");
+        rayGrad.addColorStop(0.7, "rgba(180, 125, 30, " + (rayAlpha * 0.12) + ")");
+        rayGrad.addColorStop(1, "transparent");
+        ctx.fillStyle = rayGrad;
+        ctx.beginPath();
+        ctx.moveTo(-18 * S, 0);
+        ctx.lineTo(18 * S, 0);
+        ctx.lineTo(105 * S, 560 * S);
+        ctx.lineTo(-105 * S, 560 * S);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Shimmering Ornamental Manuscript Veil line across the threshold of unconsciousness
+      if (opts.drawVeilLine) {
+        ctx.save();
+        ctx.strokeStyle = "rgba(232, 182, 76, " + (opts.veilAlpha || 0.35) + ")";
+        ctx.lineWidth = 1.3 * S;
+        ctx.setLineDash([8 * S, 6 * S]);
+        const vY = (opts.veilY || 320) * S;
+        ctx.beginPath();
+        ctx.moveTo(-width / 2 / customScale, vY);
+        ctx.lineTo(width / 2 / customScale, vY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
 
       // 1. Serene Imperceptible Micro-gaze Drift (utter stillness at the center of looking)
       const gazeX = Math.sin(localT * 0.20) * (3.5 * S);
@@ -1023,7 +1060,9 @@
         ctx.lineWidth = (isScratching ? 2.6 : 2.0) * fade;
         ctx.beginPath();
         const perturb = Math.sin(t * 12 + w) * 3;
-        ctx.ellipse(0, 0, (r + perturb), (r * 0.7 + perturb), -0.25, 0, Math.PI * 2);
+        const radX = Math.max(0.1, r + perturb);
+        const radY = Math.max(0.1, r * 0.7 + perturb * 0.7);
+        ctx.ellipse(0, 0, radX, radY, -0.25, 0, Math.PI * 2);
         ctx.stroke();
       }
 
@@ -1129,14 +1168,31 @@
 
     // Masterwork Renaissance Anatomical Sacred Heart & Antique Calligraphic Quill
     // Copperplate engraving style with organic systolic pulse and flowing golden calligraphic ink
-    function drawPenInHeart(localT, alpha = 1) {
+    function drawPenInHeart(localT, alpha = 1, opts = {}) {
       if (alpha <= 0.001) return;
       ctx.save();
       ctx.globalAlpha = alpha;
-      ctx.translate(cx, cy);
+      const offX = (opts.offsetX || 0) * S;
+      const offY = (opts.offsetY || 0) * S;
+      const customScale = opts.scale !== undefined ? opts.scale : 1.0;
+      ctx.translate(cx + offX, cy + offY);
+      ctx.scale(customScale, customScale);
 
       const isPortrait = width < height;
       const portraitScale = isPortrait ? 0.78 : 1.0;
+
+      // Radiant golden revelation aura expanding through the chest
+      if (opts.revealGlow) {
+        const glowR = (360 + Math.sin(localT * 4) * 35) * S * portraitScale;
+        const gGrad = ctx.createRadialGradient(0, 0, 15 * S, 0, 0, glowR);
+        gGrad.addColorStop(0, "rgba(255, 233, 168, " + (opts.revealGlow * 0.45) + ")");
+        gGrad.addColorStop(0.35, "rgba(232, 182, 76, " + (opts.revealGlow * 0.22) + ")");
+        gGrad.addColorStop(1, "transparent");
+        ctx.fillStyle = gGrad;
+        ctx.beginPath();
+        ctx.arc(0, 0, glowR, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
       // 1. Organic Double-Systole (lub-dub) Heartbeat Pulse
       const phase = (localT % 1.0);
@@ -1245,11 +1301,15 @@
 
     // --- BEAT 6: THE FORK (Transformation) ---
     // Diverging Illuminated Paths & Pen Metamorphosis
-    function drawTheFork(localT, alpha = 1) {
+    function drawTheFork(localT, alpha = 1, opts = {}) {
       if (alpha <= 0.001) return;
       ctx.save();
       ctx.globalAlpha = alpha;
-      ctx.translate(cx, cy);
+      const offX = (opts.offsetX || 0) * S;
+      const offY = (opts.offsetY || 0) * S;
+      const customScale = opts.scale !== undefined ? opts.scale : 1.0;
+      ctx.translate(cx + offX, cy + offY);
+      ctx.scale(customScale, customScale);
 
       setGoldGlow(1.3);
 
@@ -1354,18 +1414,20 @@
         const vineCount = Math.floor(chooseT * 7);
         for (let v = 1; v <= vineCount; v++) {
           const ratio = v / 7;
-          const ptIdx = Math.floor(denseFullChosen.length * ratio);
+          const ptIdx = Math.min(denseFullChosen.length - 1, Math.floor(denseFullChosen.length * ratio));
           const p = denseFullChosen[ptIdx];
-          drawAcanthusScroll(ctx, p[0], p[1], p[0] + 35 * S, p[1] - 30 * S, 1, 0.45, 0.9);
+          if (p) {
+            drawAcanthusScroll(ctx, p[0], p[1], p[0] + 35 * S, p[1] - 30 * S, 1, 0.45, 0.9);
 
-          // Starlight flower blossom
-          ctx.fillStyle = "#ffffff";
-          ctx.shadowColor = "#ffe9a8";
-          ctx.shadowBlur = 12 * S;
-          ctx.beginPath();
-          ctx.arc(p[0] + 20 * S, p[1] - 26 * S, 2.5 * S, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.shadowBlur = 0;
+            // Starlight flower blossom
+            ctx.fillStyle = "#ffffff";
+            ctx.shadowColor = "#ffe9a8";
+            ctx.shadowBlur = 12 * S;
+            ctx.beginPath();
+            ctx.arc(p[0] + 20 * S, p[1] - 26 * S, 2.5 * S, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+          }
         }
       }
 
@@ -1489,11 +1551,15 @@
 
     // --- BEAT 7: THE ROAD (Great Way) ---
     // Authentic Medieval Pilgrimage Landscape (NO modern highway dashes!)
-    function drawTheRoad(localT, alpha = 1) {
+    function drawTheRoad(localT, alpha = 1, opts = {}) {
       if (alpha <= 0.001) return;
       ctx.save();
       ctx.globalAlpha = alpha;
-      ctx.translate(cx, cy);
+      const offX = (opts.offsetX || 0) * S;
+      const offY = (opts.offsetY || 0) * S;
+      const customScale = opts.scale !== undefined ? opts.scale : 1.0;
+      ctx.translate(cx + offX, cy + offY);
+      ctx.scale(customScale, customScale);
 
       setGoldGlow(1.4);
 
@@ -1785,95 +1851,264 @@
       ctx.restore();
     }
 
-    // --- Master Render Frame Function ---
+    // --- Smoothstep Interpolation Helper ---
+    function smoothstep(min, max, value) {
+      const x = Math.max(0, Math.min(1, (value - min) / (max - min)));
+      return x * x * (3 - 2 * x);
+    }
+
+    // --- Master Render Frame Function: Continuous Archetypal Flow ---
     function renderFrame(t) {
       ctx.clearRect(0, 0, width, height);
       drawVellumBackground(t);
 
-      // Cross-dissolve helper (2.5s smooth parametric transition between beats)
-      const FADE_DUR = 2.5;
+      const isPortrait = width < height;
 
-      function getBeatAlpha(start, dur) {
-        const end = start + dur;
-        if (t < start - FADE_DUR || t > end + FADE_DUR) return 0;
-        let a = 1;
-        if (t < start + FADE_DUR) {
-          a = Math.max(0, (t - (start - FADE_DUR * 0.2)) / (FADE_DUR * 1.2));
-        } else if (t > end - FADE_DUR) {
-          a = Math.max(0, (end + FADE_DUR - t) / (FADE_DUR * 2));
+      // =========================================================================
+      // CONTINUOUS CINEMATOGRAPHIC ARCHETYPAL FLOW ENGINE
+      // =========================================================================
+
+      // -------------------------------------------------------------------------
+      // BEAT 1 & 2: THE EYE (Matrix) & THE HAND (Potentiator) across the Veil
+      // -------------------------------------------------------------------------
+      if (t < 58) {
+        if (t <= 28) {
+          // Pure Matrix: Stillness at center
+          drawTheEye(t, 1.0, { scale: 1.0, offsetX: 0, offsetY: 0 });
+        } else if (t > 28 && t <= 36) {
+          // Camera glides up; Eye ascends to upper celestial realm
+          const p = smoothstep(28, 36, t);
+          const eyeY = (isPortrait ? -190 : -180) * p;
+          const eyeScale = 1.0 - 0.38 * p;
+          drawTheEye(t, 1.0, {
+            offsetY: eyeY,
+            scale: eyeScale,
+            drawVeilRay: p > 0.25,
+            rayAlpha: p * 0.45,
+            drawVeilLine: p > 0.35,
+            veilAlpha: p * 0.35,
+            veilY: (isPortrait ? 20 : 0)
+          });
+        } else if (t > 36 && t <= 50) {
+          // CO-PRESENCE: Eye watches from above, Hand reaches into dark below
+          drawTheEye(t, 1.0, {
+            offsetY: isPortrait ? -190 : -180,
+            scale: 0.62,
+            drawVeilRay: true,
+            rayAlpha: 0.45,
+            drawVeilLine: true,
+            veilAlpha: 0.35,
+            veilY: isPortrait ? 20 : 0
+          });
+        } else if (t > 50 && t <= 58) {
+          // Camera glides down and zooms into the Hand; Eye dissolves
+          const p = smoothstep(50, 58, t);
+          const eyeAlpha = 1.0 - p;
+          if (eyeAlpha > 0.01) {
+            drawTheEye(t, eyeAlpha, {
+              offsetY: (isPortrait ? -190 : -180) - 80 * p,
+              scale: 0.62 - 0.1 * p,
+              drawVeilRay: true,
+              rayAlpha: 0.45 * (1 - p)
+            });
+          }
         }
-        return Math.min(Math.max(a, 0), 1);
+
+        // Hand entry and co-presence during Beat 2
+        if (t >= 32) {
+          const targetHandY = isPortrait ? 135 : 160;
+          const targetHandX = isPortrait ? 20 : 65;
+          const targetHandScale = isPortrait ? 0.70 : 0.76;
+
+          if (t <= 42) {
+            // Hand enters from lower darkness
+            const enterP = smoothstep(32, 42, t);
+            drawTheHand(t - 32, enterP, {
+              scale: 0.60 + (targetHandScale - 0.60) * enterP,
+              offsetX: 30 * (1 - enterP) + targetHandX,
+              offsetY: 180 * (1 - enterP) + targetHandY
+            });
+          } else if (t > 42 && t <= 50) {
+            // Hand reaching in co-presence beneath the Eye
+            drawTheHand(t - 32, 1.0, {
+              scale: targetHandScale,
+              offsetX: targetHandX,
+              offsetY: targetHandY
+            });
+          } else if (t > 50 && t <= 58) {
+            // Hand transitions to full center screen
+            const p = smoothstep(50, 58, t);
+            drawTheHand(t - 32, 1.0, {
+              scale: targetHandScale + (1.0 - targetHandScale) * p,
+              offsetX: targetHandX * (1 - p),
+              offsetY: targetHandY * (1 - p)
+            });
+          }
+        }
       }
 
-      // 1. Matrix — The Eye (0 – 35s)
-      const a1 = getBeatAlpha(0, 35);
-      if (a1 > 0) drawTheEye(t, a1);
+      // -------------------------------------------------------------------------
+      // BEATS 2, 3, 4: CONTINUOUS HAND (Potentiator -> Catalyst -> Experience)
+      // Zero cuts. Unbroken single-hand organic metamorphosis.
+      // -------------------------------------------------------------------------
+      if (t >= 58 && t < 152) {
+        const handLocalT = t - 32;
 
-      // 2. Potentiator — The Hand (35 – 70s)
-      const a2 = getBeatAlpha(35, 35);
-      if (a2 > 0) drawTheHand(t - 35, a2);
+        if (t < 70) {
+          // Beat 2: Full reach into darkness (zero beacon)
+          drawTheHand(handLocalT, 1.0, {
+            scale: 1.0,
+            offsetX: 0,
+            offsetY: 0
+          });
+        } else if (t >= 70 && t < 108) {
+          // Beat 3: The Itch blooms on the palm -> flinch -> scratch
+          const itchPhase = t - 70;
+          let twAngle = 0;
+          const isScratching = (itchPhase >= 15 && itchPhase < 28);
 
-      // 3. Catalyst — The Itch (70 – 110s)
-      const a3 = getBeatAlpha(70, 40);
-      if (a3 > 0) {
-        const twitchPhase = (t - 70);
-        let twAngle = 0;
-        const isScratching = (twitchPhase >= 16 && twitchPhase < 28);
+          if (itchPhase > 5 && itchPhase < 15) {
+            twAngle = Math.sin(itchPhase * 9) * 0.08;
+          } else if (isScratching) {
+            twAngle = -0.15 + Math.sin(itchPhase * 14) * 0.06;
+          } else if (itchPhase >= 28) {
+            twAngle = 0.06 + Math.cos(itchPhase * 2) * 0.03;
+          }
 
-        if (twitchPhase > 6 && twitchPhase < 16) {
-          twAngle = Math.sin(twitchPhase * 9) * 0.09;
-        } else if (isScratching) {
-          twAngle = -0.16 + Math.sin(twitchPhase * 14) * 0.06;
-        } else if (twitchPhase >= 28) {
-          twAngle = 0.08 + Math.cos(twitchPhase * 2) * 0.04;
+          drawTheHand(handLocalT, 1.0, {
+            scale: 1.12,
+            offsetX: -25,
+            offsetY: -15,
+            twitchAngle: twAngle,
+            drawItch: true,
+            isScratching: isScratching
+          });
+        } else if (t >= 108 && t < 140) {
+          // Beat 4: Hand opens -> Callus crystallizes in the exact footprint
+          const callusMat = Math.min((t - 108) / 14, 1.0);
+          const recallPhase = Math.max(0, 1 - Math.abs(t - 127) / 2.5);
+          const memoryTwitch = Math.sin(recallPhase * Math.PI) * 0.035;
+
+          drawTheHand(handLocalT, 1.0, {
+            scale: 1.06,
+            offsetX: -15,
+            offsetY: -10,
+            twitchAngle: memoryTwitch,
+            drawCallus: true,
+            callusMaturity: callusMat,
+            callusFlash: recallPhase * 0.6
+          });
+        } else if (t >= 140 && t < 152) {
+          // Transition: Hand retracts toward chest and dissolves into Heart
+          const p = smoothstep(140, 150, t);
+          const handAlpha = 1.0 - p;
+          if (handAlpha > 0.01) {
+            drawTheHand(handLocalT, handAlpha, {
+              scale: 1.06 - 0.3 * p,
+              offsetX: -15 - 90 * p,
+              offsetY: -10 + 40 * p,
+              drawCallus: true,
+              callusMaturity: 1.0
+            });
+          }
+        }
+      }
+
+      // -------------------------------------------------------------------------
+      // BEAT 5: THE PEN IN THE HEART (Significator)
+      // Revealed at center of chest as hand recedes
+      // -------------------------------------------------------------------------
+      if (t >= 142 && t < 192) {
+        const heartLocalT = t - 144;
+        let heartAlpha = 1.0;
+        let heartOffX = 0;
+        let revealGlow = 0;
+
+        if (t < 152) {
+          // Emerging revelation
+          const p = smoothstep(142, 150, t);
+          heartAlpha = p;
+          revealGlow = p;
+        } else if (t >= 180 && t < 190) {
+          // Camera tracking along ink ribbon toward the right
+          const p = smoothstep(180, 188, t);
+          heartOffX = -460 * p;
+          heartAlpha = 1.0 - p;
         }
 
-        drawTheHand(t - 35, a3, {
-          scale: 1.15,
-          offsetX: -40,
-          offsetY: -30,
-          twitchAngle: twAngle,
-          drawItch: true,
-          isScratching: isScratching
-        });
+        if (heartAlpha > 0.01) {
+          drawPenInHeart(heartLocalT, heartAlpha, {
+            offsetX: heartOffX,
+            offsetY: 0,
+            revealGlow: revealGlow
+          });
+        }
       }
 
-      // 4. Experience — The Callus (110 – 145s)
-      const a4 = getBeatAlpha(110, 35);
-      if (a4 > 0) {
-        const callusMat = Math.min((t - 110) / 16, 1);
-        // Visceral instinctual memory recognition at t ≈ 126s
-        // The callus records — it does not shield or make the hand immune.
-        // When the memory recurs, the hand knows before it thinks (subtle muscle twitch).
-        const recallPhase = Math.max(0, 1 - Math.abs(t - 126) / 2.5);
-        const memoryTwitch = Math.sin(recallPhase * Math.PI) * 0.035;
+      // -------------------------------------------------------------------------
+      // BEAT 6: THE FORK (Transformation)
+      // Follows ink line from Heart -> Fork bifurcation -> Pen metamorphosis
+      // -------------------------------------------------------------------------
+      if (t >= 180 && t < 226) {
+        const forkLocalT = t - 186;
+        let forkAlpha = 1.0;
+        let forkOffX = 0;
 
-        drawTheHand(t - 35, a4, {
-          scale: 1.05,
-          offsetX: -20,
-          offsetY: -10,
-          twitchAngle: memoryTwitch,
-          drawCallus: true,
-          callusMaturity: callusMat,
-          callusFlash: recallPhase * 0.5
-        });
+        if (t < 188) {
+          // Entering as heart shifts left
+          const p = smoothstep(180, 188, t);
+          forkAlpha = p;
+          forkOffX = 320 * (1 - p);
+        } else if (t >= 218 && t < 226) {
+          // Pen lifts up and glides away into starlight; ribbon yields to road
+          const p = smoothstep(218, 224, t);
+          forkAlpha = 1.0 - p;
+        }
+
+        if (forkAlpha > 0.01) {
+          drawTheFork(forkLocalT, forkAlpha, {
+            offsetX: forkOffX,
+            offsetY: 0
+          });
+        }
       }
 
-      // 5. Significator — The Pen in the Heart (145 – 185s)
-      const a5 = getBeatAlpha(145, 40);
-      if (a5 > 0) drawPenInHeart(t - 145, a5);
+      // -------------------------------------------------------------------------
+      // BEAT 7: THE ROAD (Great Way)
+      // 2D ink line lifts into 3D flagstones, hills rise, pilgrim walks
+      // -------------------------------------------------------------------------
+      if (t >= 220 && t < 272) {
+        const roadLocalT = t - 224;
+        let roadAlpha = 1.0;
+        let roadScale = 1.0;
 
-      // 6. Transformation — The Fork (185 – 225s)
-      const a6 = getBeatAlpha(185, 40);
-      if (a6 > 0) drawTheFork(t - 185, a6);
+        if (t < 228) {
+          // Perspective tilt expansion into road
+          const p = smoothstep(220, 226, t);
+          roadAlpha = p;
+          roadScale = 0.90 + 0.10 * p;
+        } else if (t >= 264 && t < 272) {
+          // Fades smoothly as Coda polyptych expands
+          const p = smoothstep(264, 270, t);
+          roadAlpha = 1.0 - p;
+        }
 
-      // 7. Great Way — The Road (225 – 270s)
-      const a7 = getBeatAlpha(225, 45);
-      if (a7 > 0) drawTheRoad(t - 225, a7);
+        if (roadAlpha > 0.01) {
+          drawTheRoad(roadLocalT, roadAlpha, {
+            scale: roadScale
+          });
+        }
+      }
 
-      // 8. Coda (270 – 290s)
-      const a8 = getBeatAlpha(270, 20);
-      if (a8 > 0) drawCoda(t - 270, a8);
+      // -------------------------------------------------------------------------
+      // BEAT 8: CODA (The Completed Manuscript Folio)
+      // Full Cosmogram: Eye, Heart/Pen, Hand, Road united
+      // -------------------------------------------------------------------------
+      if (t >= 268) {
+        const codaLocalT = t - 270;
+        const p = smoothstep(268, 274, t);
+        drawCoda(codaLocalT, p);
+      }
 
       // Update Intertitles
       updateIntertitles(t);
@@ -1902,6 +2137,11 @@
     }
 
     function updateIntertitles(t) {
+      if (t >= 268) {
+        intertitleEl.classList.remove("active");
+        intertitleEl.textContent = "";
+        return;
+      }
       let currentCard = null;
       for (let i = 0; i < INTERTITLES.length; i++) {
         const item = INTERTITLES[i];
